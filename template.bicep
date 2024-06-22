@@ -40,20 +40,23 @@ param networkSecurityGroupName string = '${virtualNetworkName}-NSG-CASG'
 ])
 param securityType string = 'Standard'
 
-var machines = {
-  machine1:  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
-  machine2:  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: '8.0.2019050711' }
-  machine3:  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
-  machine4:  { publisher: 'redhat', offer: 'rhel',          sku: '9-lvm',           version: 'latest' }
-  machine5:  { publisher: 'redhat', offer: 'rhel-cvm',      sku: '9_3_cvm_sev_snp', version: 'latest' }
-  machine6:  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8.0',             version: '8.0.2020021914' }
-  machine7:  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8_8',             version: '8.8.2023121916' }
-  machine8:  { publisher: 'redhat', offer: 'rhel-ha',       sku: '9_0',             version: 'latest' }
-  machine9:  { publisher: 'redhat', offer: 'rhel-raw',      sku: '9-raw',           version: 'latest' }
-  machine10: { publisher: 'redhat', offer: 'rhel-raw',      sku: '8-raw',           version: '8.0.2021011801' }
-  machine11: { publisher: 'redhat', offer: 'rhel-sap-apps', sku: '81sapapps-gen2',  version: '8.1.2021012202' }
-  machine12: { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '8.1',             version: '8.1.2020060412' }
-}
+var machines = [
+  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: '8.0.2019050711' }
+  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel',          sku: '9-lvm',           version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel-cvm',      sku: '9_3_cvm_sev_snp', version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8.0',             version: '8.0.2020021914' }
+  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8_8',             version: '8.8.2023121916' }
+  { publisher: 'redhat', offer: 'rhel-ha',       sku: '9_0',             version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel-raw',      sku: '9-raw',           version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel-raw',      sku: '8-raw',           version: '8.0.2021011801' }
+  { publisher: 'redhat', offer: 'rhel-sap-apps', sku: '81sapapps-gen2',  version: '8.1.2021012202' }
+  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '8.1',             version: '8.1.2020060412' }
+  { publisher: 'redhat', offer: 'rhel',          sku: '7-raw',           version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '7_9',             version: '7.9.2023100311' }
+  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '79sapha-gen2',    version: '7.9.2023100311' }
+]
 
 var publicIPAddressName = '${vmName}PublicIP'
 var networkInterfaceName = '${vmName}Nic'
@@ -85,7 +88,7 @@ var extensionVersion = '1.0'
 var maaTenantName = 'GuestAttestation'
 var maaEndpoint = substring('emptystring', 0, 0)
 
-resource networkInterface 'Microsoft.Network/networkInterfaces@2023-09-01' = [for (name, i) in objectKeys(machines): {
+resource networkInterface 'Microsoft.Network/networkInterfaces@2023-09-01' = [for i in range(0,length(machines)): {
   name: '${networkInterfaceName}${i}'
   location: location
   properties: {
@@ -167,7 +170,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   }
 }
 
-resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2023-09-01' = [for (name, i) in objectKeys(machines): {
+resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2023-09-01' = [for i in range(0,length(machines)): {
   name: '${publicIPAddressName}${i}'
   location: location
   sku: {
@@ -183,8 +186,8 @@ resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2023-09-01' = [for
   }
 } ]
 
-resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [for (vmname, i) in objectKeys(machines): {
-  name: vmname
+resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [for i in range(0,length(machines)): {
+  name: '${vmName}${i}'
   location: location
   properties: {
     hardwareProfile: {
@@ -197,7 +200,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [for (vmname, i) in
           storageAccountType: osDiskType
         }
       }
-      imageReference: machines[vmname]
+      imageReference: machines[i]
     }
     networkProfile: {
       networkInterfaces: [
@@ -205,6 +208,12 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [for (vmname, i) in
           id: networkInterface[i].id
         }
       ]
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: 'STORAGE'
+      }
     }
     osProfile: {
       computerName: '${vmName}${i}'
@@ -214,7 +223,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [for (vmname, i) in
     }
     securityProfile: (securityType == 'TrustedLaunch') ? securityProfileJson : null
   }
-}]
+} ]
 
 
 output adminUsername string = adminUsername
