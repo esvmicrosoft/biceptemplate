@@ -41,25 +41,10 @@ param networkSecurityGroupName string = '${virtualNetworkName}-NSG-CASG'
 param securityType string = 'Standard'
 
 @description('RightNow')
-param rightnow string = utcNow(yyyyMMddHHmm)
+param rightnow string = utcNow(yyyy MM dd HH mm)
 
-@description('Deployment Location')
-##########@allowed([
-##########  'westeurope'
-##########  'northeurope'
-##########])
-param location string
 
-@allowed([
-  'Standard_LRS'
-  'Standard_GRS'
-  'Standard_RAGRS'
-  'Standard_ZRS'
-  'Premium_LRS'
-  'Premium_ZRS'
-  'Standard_GZRS'
-  'Standard_RAGZRS'
-])
+@description('Storage Account SKU'')
 param stSKU string = 'Standard_LRS'
 
 // This function ensures that the name is stored in lowercase.
@@ -86,19 +71,6 @@ var machines = [
   { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
   { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: '8.0.2019050711' }
 ]
-##  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
-##  { publisher: 'redhat', offer: 'rhel',          sku: '9-lvm',           version: 'latest' }
-##  { publisher: 'redhat', offer: 'rhel-cvm',      sku: '9_3_cvm_sev_snp', version: 'latest' }
-##  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8.0',             version: '8.0.2020021914' }
-##  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8_8',             version: '8.8.2023121916' }
-##  { publisher: 'redhat', offer: 'rhel-ha',       sku: '9_0',             version: 'latest' }
-##  { publisher: 'redhat', offer: 'rhel-raw',      sku: '9-raw',           version: 'latest' }
-##  { publisher: 'redhat', offer: 'rhel-raw',      sku: '8-raw',           version: '8.0.2021011801' }
-##  { publisher: 'redhat', offer: 'rhel-sap-apps', sku: '81sapapps-gen2',  version: '8.1.2021012202' }
-##  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '8.1',             version: '8.1.2020060412' }
-##  { publisher: 'redhat', offer: 'rhel',          sku: '7-raw',           version: 'latest' }
-##  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '7_9',             version: '7.9.2023100311' }
-##  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '79sapha-gen2',    version: '7.9.2023100311' }
 
 var publicIPAddressName = '${vmName}PublicIP'
 var networkInterfaceName = '${vmName}Nic'
@@ -114,6 +86,9 @@ var linuxConfiguration = {
         keyData: adminPasswordOrKey
       }
     ]
+  }
+  patchSettings: {
+      patchMode: 'ImageDefault'
   }
 }
 var securityProfileJson = {
