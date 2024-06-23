@@ -40,22 +40,36 @@ param networkSecurityGroupName string = '${virtualNetworkName}-NSG-CASG'
 ])
 param securityType string = 'Standard'
 
+@description('RightNow')
+param rightnow string = utcNow()
+
+
+@description('Storage Account SKU')
+param stSKU string = 'Standard_LRS'
+
+// This function ensures that the name is stored in lowercase.
+var storageAccountName = toLower('${uniqueString(subscription().subscriptionId)}')
+
+resource st 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+  name: storageAccountName
+  location: location
+  sku: {
+    name: stSKU
+  }
+  kind: 'StorageV2'
+   properties: {
+     accessTier: 'Hot'
+   }
+}
+
+output storageAccountId string = st.id
+output storageAccountName string = st.name
+
+
+
 var machines = [
   { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
   { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: '8.0.2019050711' }
-  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel',          sku: '9-lvm',           version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-cvm',      sku: '9_3_cvm_sev_snp', version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8.0',             version: '8.0.2020021914' }
-  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8_8',             version: '8.8.2023121916' }
-  { publisher: 'redhat', offer: 'rhel-ha',       sku: '9_0',             version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-raw',      sku: '9-raw',           version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-raw',      sku: '8-raw',           version: '8.0.2021011801' }
-  { publisher: 'redhat', offer: 'rhel-sap-apps', sku: '81sapapps-gen2',  version: '8.1.2021012202' }
-  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '8.1',             version: '8.1.2020060412' }
-  { publisher: 'redhat', offer: 'rhel',          sku: '7-raw',           version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '7_9',             version: '7.9.2023100311' }
-  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '79sapha-gen2',    version: '7.9.2023100311' }
 ]
 
 var publicIPAddressName = '${vmName}PublicIP'
@@ -72,6 +86,9 @@ var linuxConfiguration = {
         keyData: adminPasswordOrKey
       }
     ]
+  }
+  patchSettings: {
+      patchMode: 'ImageDefault'
   }
 }
 var securityProfileJson = {
@@ -212,7 +229,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [for i in range(0,l
     diagnosticsProfile: {
       bootDiagnostics: {
         enabled: true
-        storageUri: 'STORAGE'
       }
     }
     osProfile: {
