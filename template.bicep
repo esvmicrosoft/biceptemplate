@@ -41,10 +41,10 @@ param networkSecurityGroupName string = '${virtualNetworkName}-NSG-CASG'
 param securityType string = 'Standard'
 
 @description('RightNow')
-param rightnow string = utcNow(yyyy MM dd HH mm)
+param rightnow string = utcNow()
 
 
-@description('Storage Account SKU'')
+@description('Storage Account SKU')
 param stSKU string = 'Standard_LRS'
 
 // This function ensures that the name is stored in lowercase.
@@ -229,7 +229,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = [for i in range(0,l
     diagnosticsProfile: {
       bootDiagnostics: {
         enabled: true
-        storageUri: st.id
       }
     }
     osProfile: {
