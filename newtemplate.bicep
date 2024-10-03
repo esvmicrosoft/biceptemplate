@@ -68,20 +68,8 @@ output storageAccountName string = st.name
 
 var machines = [
   { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: '8.0.2019050711' }
-  { publisher: 'redhat', offer: 'rhel',          sku: '8',               version: 'latest' }
   { publisher: 'redhat', offer: 'rhel',          sku: '9-lvm',           version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-cvm',      sku: '9_3_cvm_sev_snp', version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8.0',             version: '8.0.2020021914' }
-  { publisher: 'redhat', offer: 'rhel-ha',       sku: '8_8',             version: '8.8.2023121916' }
-  { publisher: 'redhat', offer: 'rhel-ha',       sku: '9_0',             version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-raw',      sku: '9-raw',           version: 'latest' }
-  { publisher: 'redhat', offer: 'rhel-raw',      sku: '8-raw',           version: '8.0.2021011801' }
-  { publisher: 'redhat', offer: 'rhel-sap-apps', sku: '81sapapps-gen2',  version: '8.1.2021012202' }
-  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '8.1',             version: '8.1.2020060412' }
-  { publisher: 'redhat', offer: 'rhel',          sku: '7-raw',           version: 'latest' }
   { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '7_9',             version: '7.9.2023100311' }
-  { publisher: 'redhat', offer: 'rhel-sap-ha',   sku: '79sapha-gen2',    version: '7.9.2023100311' }
   { publisher: 'canonical', offer: '0001-com-ubuntu-server-jammy',   sku: '22_04-lts-gen2',    version: 'latest' }
 ]
 
