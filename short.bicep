@@ -1,5 +1,5 @@
 @description('The name of the Virtual Machine.')
-param vmName string = 'machine' 
+param vmName string = 'esv' 
 
 @description('Username for the Virtual Machine.')
 param adminUsername string = 'azureuser'
@@ -9,11 +9,11 @@ param adminUsername string = 'azureuser'
   'sshPublicKey'
   'password'
 ])
-param authenticationType string = 'password'
+param authenticationType string = 'sshPublicKey'
 
 @description('SSH Key or password for the Virtual Machine. SSH key is recommended.')
 @secure()
-param adminPasswordOrKey string = 'Passw0rd!234avc'
+param adminPasswordOrKey string = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCvKcwKLiV1FdCU5XJiWA+nuaBes/hvklOHZ+J2N+YEouX+wbsTcl8Yd/ugbOiPYrc6Llrk13o/xyH1r76AVfI3Kh6esGKhBNgSyWVjq1v72jTOGPSkUitx7NFAQQYOKCzWfEtMNFlhd6nIkH9jyhQT6a/hVazD3obyCAdFpSATVOqUozMSCySSJjHxJxu48dc+uZ+Ls2w0NMJSKGShjlabW6Wlil7Q7RfEixzkzA9dRA4TEnkS4ZrL+NTU9NWogGmIb4kYz32gSr5GyfXRH69/uShfOJOXIm9ci5/5NJ7HJPrPH9aQq+AqAl6lqYkt2NqCrzezruNm4qXWnL+tbHQtnEnWkgVTUBTN4/5Mo9js8ZJ7kPBrE4yw/NY6PER/fdteFFZZDuMB6AEt+ZY4vvBwMjMbPR9nYPjKQJccG2lLiIOz5kMy8fgiU2NdpepfHsPxrUF7MHG4E0uUWrBMJMIFEoKCHttYnmKzm/xdtvUgFn0AZ2ckPUlOrxbeJWGQ1ZU='
 
 @description('Unique DNS Name for the Public IP used to access the Virtual Machine.')
 param dnsLabelPrefix string = toLower('${vmName}-${uniqueString(resourceGroup().id)}')
@@ -67,14 +67,9 @@ output storageAccountName string = st.name
 
 
 var machines = [
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/alma8_img'    }
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/oel8_img'     }
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/rhel9_img'    }
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/rhel8_img'    }
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/sles12_img'   }
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/sles15_img'   }
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/ubuntu22_img' }
-  { id: '/subscriptions/e1b71933-3de1-400d-bb74-dc2f9dfeca3e/resourceGroups/wga/providers/Microsoft.Compute/images/ubuntu24_img' }
+  { publisher: 'redhat', offer: 'rhel-raw',      sku: '9-raw',           version: 'latest' }
+  { publisher: 'redhat', offer: 'rhel-sap-apps', sku: '81sapapps-gen2',  version: '8.1.2021012202' }
+  { publisher: 'canonical', offer: '0001-com-ubuntu-server-jammy',   sku: '22_04-lts-gen2',    version: 'latest' }
 ]
 
 var publicIPAddressName = '${vmName}PublicIP'
@@ -140,32 +135,18 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-0
   properties: {
     securityRules: [
       {
-        name: 'CorpNetAccess'
+        name: 'AzureCloud'
         properties: {
           priority: 2700
           protocol: 'Tcp'
           access: 'Allow'
           direction: 'Inbound'
-          sourceAddressPrefix: 'CorpNetPublic'
+          sourceAddressPrefix: 'AzureCloud'
           sourcePortRange: '*'
           destinationAddressPrefix: '*'
           destinationPortRange: '22'
         }
       }
-      {
-        name: 'CorpNetSAW'
-        properties: {
-          priority: 2701
-          protocol: 'Tcp'
-          access: 'Allow'
-          direction: 'Inbound'
-          sourceAddressPrefix: 'CorpNetSaw'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-          destinationPortRange: '22'
-        }
-      }
-
     ]
   }
 }
@@ -199,7 +180,7 @@ resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2023-09-01' = [for
     name: 'Standard'
   }
   properties: {
-    publicIPAllocationMethod: 'Dynamic'
+    publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
     dnsSettings: {
       domainNameLabel: toLower('${vmName}${i}-${uniqueString(resourceGroup().id)}')
@@ -257,7 +238,7 @@ resource vm_custom_script 'Microsoft.Compute/virtualMachines/extensions@2015-06-
     typeHandlerVersion: '2.0'
     autoUpgradeMinorVersion: 'true'
     protectedSettings: {
-      commandToExecute: '/usr/bin/date'
+      commandToExecute: 'rm -f /etc/cron.daily/rh*; systemctl disable --now update-client-package.timer &> /dev/null || echo; systemctl mask update-client-package.timer &> /dev/null || echo ; exit 0'
     }
   }
 }]

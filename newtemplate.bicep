@@ -192,7 +192,7 @@ resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2023-09-01' = [for
   name: '${publicIPAddressName}${i}'
   location: location
   sku: {
-    name: 'Basic'
+    name: 'Standard'
   }
   properties: {
     publicIPAllocationMethod: 'Dynamic'
